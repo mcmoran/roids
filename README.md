@@ -1,6 +1,6 @@
 # roids
 
-##Team Mash Asteroids clone##
+## Team Mash Asteroids clone
 
 This is the initial readme file for the Asteroid Clone for team Mash.
 
