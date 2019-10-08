@@ -1,12 +1,10 @@
--- setting the fonts
+--setting the fonts
+--statsFont = love.graphics.newFont("courier.tff", 15)
 
---mainFont = love.graphics.newFont("Quantum.otf", 30)
---bigFont = love.graphics.newFont("Quantum.otf", 60)
---smallFont = love.graphics.newFont("KeepCalm.ttf", 15)
-
+-- printing out various stats for the game
 function printStats()
     love.graphics.setColor(1, 1, 1, .5)
-
+    --love.graphics.setFont(statsFont)
     love.graphics.print('ShipAngle: ' ..shipAngle, 10, 10)
     love.graphics.print('shipSpeedX: ' ..shipSpeedX, 10, 30)
     love.graphics.print('shipSpeedY: ' ..shipSpeedY, 10, 50)

@@ -1,4 +1,7 @@
-function love.load()
+-- game start
+gamestart = false
+
+  function love.load()
   -- requirement
   require "text" -- for readout info
 
@@ -140,8 +143,15 @@ end
 -----------------------------------------------------------------------------
 function love.draw()
 
-  for y = -1, 1 do
-    for x = -1, 1 do
+  if not gamestart then
+
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.print("Title Screen", love.graphics.getWidth() / 2 - 16, love.graphics.getHeight() / 2)
+
+  elseif gamestart then
+
+    for y = -1, 1 do
+      for x = -1, 1 do
         love.graphics.origin()
         love.graphics.translate(x * arenaWidth, y * arenaHeight)
 
@@ -166,9 +176,11 @@ function love.draw()
           love.graphics.circle('line', asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius)
         end
 
-        printStats()
-    end
-  end
+          printStats()
+      end -- end first for
+    end -- end second for
+
+  end -- ending if loop
 
 end
 
@@ -181,5 +193,9 @@ end
 function love.keypressed(key)
   if key == "escape" then
     love.event.push("quit")
+  end
+
+  if key == "return" then
+    gamestart = true
   end
 end
