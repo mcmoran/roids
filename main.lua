@@ -1,52 +1,60 @@
 function love.load()
   -- requirement
-  require "text"
+  require "text" -- for readout info
 
   -- map
   arenaWidth = 800
   arenaHeight = 600
 
-  -- ship varriables
-  shipX = arenaWidth / 2
-  shipY = arenaHeight / 2
-  shipAngle = 0
-  shipSpeedX = 0
-  shipSpeedY = 0
+  -- radius measurements
+  aimRadius = 5
   shipRadius = 30
-
-  -- bullets
-  bullets = {}
   bulletRadius = 5
-  bulletTimer = 0
 
-  math.randomseed(os.time())
-
-  -- asteroids
-  asteroids = { {x = 100, y = 100},
-                {x = arenaWidth - 100, y = 100},
-                {x = arenaWidth / 2, y = arenaHeight - 100}
-              }
-
+  -- stages of the asteroids
   asteroidStages = {{speed = 120, radius = 15},
                     {speed = 70, radius = 25},
                     {speed = 50, radius = 35},
                     {speed = 20, radius = 50}
                   }
 
-  -- random location for asteroids
-  for asteroidIndex, asteroid in ipairs(asteroids) do
-    asteroid.angle = math.random() * (2 * math.pi)
-    asteroid.stage = #asteroidStages
-  end
+  -- reset all of the changing variables
+  function reset()
+    -- ship varriables
+    shipX = arenaWidth / 2
+    shipY = arenaHeight / 2
+    shipAngle = 0
+    shipSpeedX = 0
+    shipSpeedY = 0
 
-  asteroidRadius = 50
+    -- bullets
+    bullets = {}
+    bulletTimer = 0
+
+    -- asteroids
+    asteroids = { {x = 100, y = 100},
+                  {x = arenaWidth - 100, y = 100},
+                  {x = arenaWidth / 2, y = arenaHeight - 100}
+                }
+
+    math.randomseed(os.time())
+
+    -- random location for asteroids
+    for asteroidIndex, asteroid in ipairs(asteroids) do
+      asteroid.angle = math.random() * (2 * math.pi)
+      asteroid.stage = #asteroidStages
+    end
+
+  end -- end reset function
+
+  reset()
 
 end
 
 -----------------------------------------------------------------------------
 function love.update(dt)
 
-  local turnSpeed = 10
+  local turnSpeed = 5
 
   bulletTimer = bulletTimer + dt
 
@@ -54,7 +62,6 @@ function love.update(dt)
   if love.keyboard.isDown('space') then
     if bulletTimer >= 0.5 then
       bulletTimer = 0
-
       table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
     end
   end
@@ -75,6 +82,7 @@ function love.update(dt)
     shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed * dt
   end
 
+  -- keeps the ship looping around the box
   shipX = (shipX + shipSpeedX * dt) % arenaWidth
   shipY = (shipY + shipSpeedY * dt) % arenaHeight
 
@@ -117,15 +125,14 @@ function love.update(dt)
   -- setting position of asteroid
   for asteroidIndex, asteroid in ipairs(asteroids) do
     local asteroidSpeed = 20
-    asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaWidth
-    asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaHeight
+      asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaWidth
+      asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaHeight
 
     -- check collision function
-    if areCirclesIntersecting(shipX, shipY, shipRadius, asteroid.x, asteroid.y, asteroidRadius) then
-      love.load()
+    if areCirclesIntersecting(shipX, shipY, shipRadius, asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius) then
+      reset()
       break
     end
-
   end
 
 end
