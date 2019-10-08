@@ -144,9 +144,16 @@ end
 function love.draw()
 
   if not gamestart then
-
+    love.graphics.setFont(titleScreenFont)
     love.graphics.setColor(1, 1, 1)
-    love.graphics.print("Title Screen", love.graphics.getWidth() / 2 - 16, love.graphics.getHeight() / 2)
+    love.graphics.print("トトロ vs. まっ黒黒すき。", 30, 100)
+    love.graphics.setFont(defaultFont)
+    love.graphics.print("Totoro vs. the Dust Mites", 40, 150)
+
+    love.graphics.setFont(titleScreenCommand)
+    love.graphics.print("スタートを押して開始します。", 30, 250)
+    love.graphics.setFont(defaultFont)
+    love.graphics.print("Press start to begin.", 40, 280)
 
   elseif gamestart then
 

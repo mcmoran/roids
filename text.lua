@@ -1,6 +1,11 @@
 --setting the fonts
 --statsFont = love.graphics.newFont("courier.tff", 15)
 
+titleScreenFont = love.graphics.newFont("chihaya.ttf", 50)
+titleScreenCommand = love.graphics.newFont("chihaya.ttf", 30)
+
+defaultFont = love.graphics.newFont(14)
+
 -- printing out various stats for the game
 function printStats()
     love.graphics.setColor(1, 1, 1, .5)
