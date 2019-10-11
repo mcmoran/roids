@@ -1,19 +1,25 @@
 --setting the fonts
---statsFont = love.graphics.newFont("courier.tff", 15)
 
 titleScreenFont = love.graphics.newFont("chihaya.ttf", 50)
 titleScreenCommand = love.graphics.newFont("chihaya.ttf", 30)
+englishScreenFont = love.graphics.newFont("chihaya.ttf", 25)
+--defaultFont = love.graphics.newFont(14)
 
-defaultFont = love.graphics.newFont(14)
+-- splash Screen Text function
 
--- printing out various stats for the game
-function printStats()
-    love.graphics.setColor(1, 1, 1, .5)
-    --love.graphics.setFont(statsFont)
-    love.graphics.print('ShipAngle: ' ..shipAngle, 10, 10)
-    love.graphics.print('shipSpeedX: ' ..shipSpeedX, 10, 30)
-    love.graphics.print('shipSpeedY: ' ..shipSpeedY, 10, 50)
-    love.graphics.print('#bullets: ' ..#bullets, 10, 70)
-    love.graphics.print('#asteroids: ' ..#asteroids, 10, 90)
+function splashText()
 
-end -- end printStats function
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.draw(splashBG)
+  love.graphics.setFont(titleScreenFont)
+  love.graphics.setColor(0.2, 0.2, 0.2)
+  love.graphics.print("トトロ vs. まっ黒黒すき。", 30, 50)
+  love.graphics.setFont(englishScreenFont)
+  love.graphics.print("Totoro vs. the Dust Mites", 40, 100)
+
+  love.graphics.setFont(titleScreenCommand)
+  love.graphics.print("スタートを押して開始します。", 30, 150)
+  love.graphics.setFont(englishScreenFont)
+  love.graphics.print("Press start to begin.", 40, 180)
+
+end -- end function

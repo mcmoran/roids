@@ -4,23 +4,25 @@ gamestart = false
   function love.load()
   -- requirement
   require "text" -- for readout info
-  require "image" -- for images
+
+  -- splash screen background
+  splashBG = love.graphics.newImage("splash-bg.png")
 
   -- map
   arenaWidth = 800
   arenaHeight = 600
 
   -- radius measurements
-  --aimRadius = 5
-  --shipRadius = 30
-  --bulletRadius = 5
+  aimRadius = 5
+  shipRadius = 30
+  bulletRadius = 5
 
   -- stages of the asteroids
-  --[[asteroidStages = {{speed = 120, radius = 15},
+  asteroidStages = {{speed = 120, radius = 15},
                     {speed = 70, radius = 25},
                     {speed = 50, radius = 35},
                     {speed = 20, radius = 50}
-                  } ]]--
+                  }
 
   -- reset all of the changing variables
   function reset()
@@ -35,29 +37,22 @@ gamestart = false
     bullets = {}
     bulletTimer = 0
 
-    -- Mites Data
+    -- Mites
     mites = {x = 50, y = 50}
 
     -- asteroids
-    --[[ asteroids = { {x = 100, y = 100},
+    asteroids = { {x = 100, y = 100},
                   {x = arenaWidth - 100, y = 100},
                   {x = arenaWidth / 2, y = arenaHeight - 100}
-                } ]]--
+                }
 
     math.randomseed(os.time())
 
-    -- random location for mites
-    for mitesIndex, mites in ipairs(mites) do
-      mites.x = math.random()
-      mitex.y = math.random()
-    end
-
-
     -- random location for asteroids
-    --for asteroidIndex, asteroid in ipairs(asteroids) do
-    --  asteroid.angle = math.random() * (2 * math.pi)
-    --  asteroid.stage = #asteroidStages
-    --end
+    for asteroidIndex, asteroid in ipairs(asteroids) do
+      asteroid.angle = math.random() * (2 * math.pi)
+      asteroid.stage = #asteroidStages
+    end
 
   end -- end reset function
 
@@ -89,14 +84,12 @@ function love.update(dt)
     shipAngle = (shipAngle - turnSpeed * dt) % (2 * math.pi)
   end
 
---[[ moving the ship
+-- moving the ship
   if love.keyboard.isDown('up') then
     local shipSpeed = 100
-    shipSpeedX = shipSpeedX + math.cos(shipAngle) --* shipSpeed * dt
-    shipSpeedY = shipSpeedY + math.sin(shipAngle) --* shipSpeed * dt
+    shipSpeedX = shipSpeedX + math.cos(shipAngle) * shipSpeed * dt
+    shipSpeedY = shipSpeedY + math.sin(shipAngle) * shipSpeed * dt
   end
-]]--
--- stopping the ship
 
   -- keeps the ship looping around the box
   shipX = (shipX + shipSpeedX * dt) % arenaWidth
@@ -117,7 +110,7 @@ function love.update(dt)
     end
 
     -- check bullet collision with asteroids
-    --[[ for asteroidIndex = #asteroids, 1, -1 do
+    for asteroidIndex = #asteroids, 1, -1 do
       local asteroid = asteroids[asteroidIndex]
 
       if areCirclesIntersecting(bullet.x, bullet.y, bulletRadius, asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius) then
@@ -134,12 +127,12 @@ function love.update(dt)
         table.remove(asteroids, asteroidIndex)
         break
       end
-    end ]]--
+    end
   end
 
 
   -- setting position of asteroid
-  --[[for asteroidIndex, asteroid in ipairs(asteroids) do
+  for asteroidIndex, asteroid in ipairs(asteroids) do
     local asteroidSpeed = 20
       asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaWidth
       asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaHeight
@@ -149,7 +142,7 @@ function love.update(dt)
       reset()
       break
     end
-  end ]]--
+  end
 
 end
 
@@ -157,8 +150,18 @@ end
 function love.draw()
 
   if not gamestart then
+    love.graphics.setColor(1, 1, 1)
+    love.graphics.draw(splashBG)
+    love.graphics.setFont(titleScreenFont)
+    love.graphics.setColor(0.2, 0.2, 0.2)
+    love.graphics.print("トトロ vs. まっ黒黒すき。", 30, 50)
+    love.graphics.setFont(defaultFont)
+    love.graphics.print("Totoro vs. the Dust Mites", 40, 100)
 
-    splashText() --pulls in text from text.lua
+    love.graphics.setFont(titleScreenCommand)
+    love.graphics.print("スタートを押して開始します。", 30, 150)
+    love.graphics.setFont(defaultFont)
+    love.graphics.print("Press start to begin.", 40, 180)
 
   elseif gamestart then
 
@@ -167,13 +170,9 @@ function love.draw()
         love.graphics.origin()
         love.graphics.translate(x * arenaWidth, y * arenaHeight)
 
-        -- background
-        love.graphics.setColor(1, 1, 1)
-        love.graphics.draw(tempBG)
-
         -- the player
         love.graphics.setColor(0, 1, 1)
-        love.graphics.circle('fill', shipX, shipY, 30)
+        love.graphics.circle('line', shipX, shipY, shipRadius)
 
         -- the turret
         love.graphics.setColor(0, 1, 1)
@@ -187,13 +186,12 @@ function love.draw()
         end
 
         -- drawing the asteroids
-        --[[for asteroidIndex, asteroid in ipairs(asteroids) do
+        for asteroidIndex, asteroid in ipairs(asteroids) do
           love.graphics.setColor (1, 1, 1)
-          love.graphics.draw(mites)
-          --love.graphics.circle('line', asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius)
-        end ]]--
+          love.graphics.circle('line', asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius)
+        end
 
-          --printStats()
+          printStats()
       end -- end first for
     end -- end second for
 
