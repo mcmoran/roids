@@ -15,23 +15,20 @@ function love.load()
   waterRadius = 5
   mitesRadius = 5
 
-  -- radius measurements
-  --aimRadius = 5
-  --shipRadius = 30
-  --bulletRadius = 5
-
-  -- stages of the asteroids
-  --[[asteroidStages = {{speed = 120, radius = 15},
-                    {speed = 70, radius = 25},
-                    {speed = 50, radius = 35},
-                    {speed = 20, radius = 50}
-                  } ]]--
+  -- stages of the mites
+  mitesStages = { {speed = 20, clean = 25},
+                  {speed = 40, clean = 50},
+                  {speed = 60, clean = 75},
+                  {speed = 80, clean = 100}
+                  }
 
   -- reset all of the changing variables
   function reset()
+
     -- totoro's location
     totoroX = arenaWidth / 2
     totoroY = arenaHeight / 2
+
     -- totoro's directions
     totoroAngle = 0
     totoroSpeedX = 0
@@ -41,29 +38,18 @@ function love.load()
     water = {}
     waterTimer = 0
 
-    -- Mites Data
-    mites = {x = 50, y = 50}
-
-    -- asteroids
-    --[[ asteroids = { {x = 100, y = 100},
-                  {x = arenaWidth - 100, y = 100},
-                  {x = arenaWidth / 2, y = arenaHeight - 100}
-                } ]]--
-
     math.randomseed(os.time())
 
-    -- random location for mites
+    -- Mites
+    mites = { {x = 50, y = 50},
+              {x = math.random(0, arenaWidth), y = math.random(0, arenaHeight)},
+              {x = math.random(0, arenaWidth), y = math.random(0, arenaHeight)},
+            }
+
     for mitesIndex, mites in ipairs(mites) do
-      mites.x = math.random()
-      mitex.y = math.random()
+        mites.angle = math.random() * (2 * math.pi)
+        mites.stage = #mitesStages
     end
-
-
-    -- random location for asteroids
-    --for asteroidIndex, asteroid in ipairs(asteroids) do
-    --  asteroid.angle = math.random() * (2 * math.pi)
-    --  asteroid.stage = #asteroidStages
-    --end
 
   end -- end reset function
 
@@ -135,20 +121,21 @@ function love.update(dt)
       end
     end ]]--
 
+    -- setting position of mites
 
-
-  -- setting position of asteroid
-  --[[for asteroidIndex, asteroid in ipairs(asteroids) do
-    local asteroidSpeed = 20
-      asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaWidth
-      asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaHeight
+  for mitesIndex, mites in ipairs(mites) do
+    local mitesSpeed = 20
+    mites.x = (mites.x + math.cos(mites.angle) * mitesStages[mites.stage].speed * dt) % arenaWidth
+    mites.y = (mites.y + math.sin(mites.angle) * mitesStages[mites.stage].speed * dt) % arenaHeight
+  end -- end for loop
 
     -- check collision function
+    --[[
     if areCirclesIntersecting(shipX, shipY, shipRadius, asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius) then
       reset()
       break
     end
-  end ]]--
+    ]]--\
 
 end -- end love.update
 
@@ -185,14 +172,14 @@ function love.draw()
           love.graphics.circle('fill', water.x, water.y, waterRadius)
         end
 
-        -- drawing the asteroids
-        --[[for asteroidIndex, asteroid in ipairs(asteroids) do
-          love.graphics.setColor (1, 1, 1)
-          love.graphics.draw(mites)
-          --love.graphics.circle('line', asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius)
-        end ]]--
+        -- draw the mites
+        for mitesIndex, mites in ipairs(mites) do
+          love.graphics.setColor(1, 1, 1)
+          love.graphics.draw(miteImage, mites.x, mites.y, mitesStages[mites.stage].radius)
+        end
 
           --printStats()
+
       end -- end first for
     end -- end second for
 

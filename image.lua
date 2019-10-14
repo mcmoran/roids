@@ -5,7 +5,7 @@ tempBG = love.graphics.newImage("game-temp-bg.png")
 
 -- Mites
 
-mites = love.graphics.newImage("mite.png")
+miteImage = love.graphics.newImage("mite.png")
 
 -- player
 
