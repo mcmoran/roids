@@ -1,7 +1,7 @@
 -- game start
 gamestart = false
 
-  function love.load()
+function love.load()
   -- requirement
   require "text" -- for readout info
   require "image" -- for images
@@ -9,6 +9,11 @@ gamestart = false
   -- map
   arenaWidth = 800
   arenaHeight = 600
+
+  -- measurements
+  totoroRadius = 30
+  waterRadius = 5
+  mitesRadius = 5
 
   -- radius measurements
   --aimRadius = 5
@@ -24,16 +29,17 @@ gamestart = false
 
   -- reset all of the changing variables
   function reset()
-    -- ship varriables
-    shipX = arenaWidth / 2
-    shipY = arenaHeight / 2
-    shipAngle = 0
-    shipSpeedX = 0
-    shipSpeedY = 0
+    -- totoro's location
+    totoroX = arenaWidth / 2
+    totoroY = arenaHeight / 2
+    -- totoro's directions
+    totoroAngle = 0
+    totoroSpeedX = 0
+    totoroSpeedY = 0
 
-    -- bullets
-    bullets = {}
-    bulletTimer = 0
+    -- waterspray
+    water = {}
+    waterTimer = 0
 
     -- Mites Data
     mites = {x = 50, y = 50}
@@ -70,51 +76,44 @@ function love.update(dt)
 
   local turnSpeed = 5
 
-  bulletTimer = bulletTimer + dt
+  waterTimer = waterTimer + dt
 
-  -- shooting bullets
-  if love.keyboard.isDown('space') then
-    if bulletTimer >= 0.5 then
-      bulletTimer = 0
-      table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
+  -- spraying water
+  if love.keypressed('space') then
+    if waterTimer >= 0.5 then
+      waterTimer = 0
+      table.insert(water, {x = totoroX + math.cos(totoroAngle) * totoroRadius, y = totoroY + math.sin(totoroAngle) * totoroRadius, angle = totoroAngle, timeLeft = 4})
     end
   end
 
   -- moving the turret
   if love.keyboard.isDown('right') then
-    shipAngle = (shipAngle + turnSpeed * dt) % (2 * math.pi)
+    totoroAngle = (totoroAngle + turnSpeed * dt) % (2 * math.pi)
   end
 
   if love.keyboard.isDown('left') then
-    shipAngle = (shipAngle - turnSpeed * dt) % (2 * math.pi)
+    totoroAngle = (totoroAngle - turnSpeed * dt) % (2 * math.pi)
   end
 
---[[ moving the ship
-  if love.keyboard.isDown('up') then
-    local shipSpeed = 100
-    shipSpeedX = shipSpeedX + math.cos(shipAngle) --* shipSpeed * dt
-    shipSpeedY = shipSpeedY + math.sin(shipAngle) --* shipSpeed * dt
+  -- moving totoro
+  if love.keypressed('up') then
+    local totoroSpeed = 100
+    totoroSpeedX = totoroSpeedX + math.cos(totoroAngle) * totoroSpeed * dt
+    totoroSpeedY = totoroSpeedY + math.sin(totoroAngle) * totoroSpeed * dt
   end
-]]--
--- stopping the ship
 
-  -- keeps the ship looping around the box
-  shipX = (shipX + shipSpeedX * dt) % arenaWidth
-  shipY = (shipY + shipSpeedY * dt) % arenaHeight
+  -- keep totoro inside
+  if totoroX > arenaWidth then
+    totoroX = arenaWidth
+  elseif totoroX < 1 then
+    totoroX = 1
+  elseif totoroY > arenaHeight then
+    totoroY = arenaHeight
+  elseif totoroY < 1 then
+    totoroY = 1
+  end
 
-  -- adjusts the bullet over time (delete old ones and move current ones)
-  for bulletIndex = #bullets, 1, -1 do
-    local bullet = bullets[bulletIndex]
 
-    bullet.timeLeft = bullet.timeLeft - dt
-    if bullet.timeLeft <= 0 then
-      table.remove(bullets, bulletIndex)
-    else
-      local bulletSpeed = 500
-
-      bullet.x = (bullet.x + math.cos(bullet.angle) * bulletSpeed * dt) % arenaWidth
-      bullet.y = (bullet.y + math.sin(bullet.angle) * bulletSpeed * dt) % arenaHeight
-    end
 
     -- check bullet collision with asteroids
     --[[ for asteroidIndex = #asteroids, 1, -1 do
@@ -135,7 +134,7 @@ function love.update(dt)
         break
       end
     end ]]--
-  end
+
 
 
   -- setting position of asteroid
@@ -151,7 +150,7 @@ function love.update(dt)
     end
   end ]]--
 
-end
+end -- end love.update
 
 -----------------------------------------------------------------------------
 function love.draw()
@@ -172,18 +171,18 @@ function love.draw()
         love.graphics.draw(tempBG)
 
         -- the player
-        love.graphics.setColor(0, 1, 1)
-        love.graphics.circle('fill', shipX, shipY, 30)
+        love.graphics.setColor(0, 0, 0, 0.5)
+        love.graphics.circle('fill', totoroX, totoroY, totoroRadius)
 
-        -- the turret
+        -- the nozzle
         love.graphics.setColor(0, 1, 1)
-        local shipCircleDistance = 40
-        love.graphics.circle('fill', shipX + math.cos(shipAngle) * shipCircleDistance, shipY + math.sin(shipAngle) * shipCircleDistance, 5)
+        local totoroCircleDistance = 40
+        love.graphics.circle('fill', totoroX + math.cos(totoroAngle) * totoroCircleDistance, totoroY + math.sin(totoroAngle) * totoroCircleDistance, 5)
 
         -- drawing the bullets
-        for bulletIndex, bullet in ipairs(bullets) do
+        for waterIndex, water in ipairs(water) do
           love.graphics.setColor(1, 0, 0)
-          love.graphics.circle('fill', bullet.x, bullet.y, bulletRadius)
+          love.graphics.circle('fill', water.x, water.y, waterRadius)
         end
 
         -- drawing the asteroids
