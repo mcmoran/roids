@@ -1,5 +1,5 @@
 -- game start
-gamestart = false
+gamestart = true
 
 function love.load()
   -- requirement
@@ -19,7 +19,7 @@ function love.load()
   mitesStages = { {speed = 20, clean = 25},
                   {speed = 40, clean = 50},
                   {speed = 60, clean = 75},
-                  {speed = 80, clean = 100}
+                  {speed = 10, clean = 100}
                   }
 
   -- reset all of the changing variables
@@ -40,14 +40,21 @@ function love.load()
 
     math.randomseed(os.time())
 
-    -- Mites
-    mites = { {x = 50, y = 50},
-              {x = math.random(0, arenaWidth), y = math.random(0, arenaHeight)},
-              {x = math.random(0, arenaWidth), y = math.random(0, arenaHeight)},
+    -- Mites locations
+    mites = { {x = 50, y = 50, angle = 360 * (2 * math.pi)},
+              {x = 750, y = 50, angle = 2.45},
+              {x = 50, y = 550, angle = 5.60},
+              {x = 750, y = 550, angle = 3.60},
             }
+    --[[
+    mites = { {x = math.random(0, arenaWidth * 0.25), y = math.random(0, arenaHeight * 0.25)},
+              {x = math.random(arenaWidth * 0.75, arenaWidth), y = math.random(arenaHeight * 0.75, arenaHeight)},
+              {x = math.random(0, arenaWidth * 0.25), y = math.random(arenaHeight * 0.75, arenaHeight)},
+              {x = math.random(arenaWidth * 0.75, arenaWidth), y = math.random(0, arenaHeight * 0.25)},
+            } ]]--
 
     for mitesIndex, mites in ipairs(mites) do
-        mites.angle = math.random() * (2 * math.pi)
+        --mites.angle = math.random() * (2 * math.pi)
         mites.stage = #mitesStages
     end
 
@@ -99,8 +106,6 @@ function love.update(dt)
     totoroY = 1
   end
 
-
-
     -- check bullet collision with asteroids
     --[[ for asteroidIndex = #asteroids, 1, -1 do
       local asteroid = asteroids[asteroidIndex]
@@ -124,7 +129,7 @@ function love.update(dt)
     -- setting position of mites
 
   for mitesIndex, mites in ipairs(mites) do
-    local mitesSpeed = 20
+    local mitesSpeed = 10
     mites.x = (mites.x + math.cos(mites.angle) * mitesStages[mites.stage].speed * dt) % arenaWidth
     mites.y = (mites.y + math.sin(mites.angle) * mitesStages[mites.stage].speed * dt) % arenaHeight
   end -- end for loop
