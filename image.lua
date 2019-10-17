@@ -1,7 +1,7 @@
 -- image loading
 
 splashBG = love.graphics.newImage("splash-bg.png")
-tempBG = love.graphics.newImage("game-temp-bg.png")
+tempBG = love.graphics.newImage("game-temp-bg-v2.png")
 
 -- Mites
 

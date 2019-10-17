@@ -89,10 +89,13 @@ function love.update(dt)
   end
 
   -- moving totoro
-  if love.keypressed('up') then
+  if love.keyboard.isDown('up') then
     local totoroSpeed = 100
     totoroSpeedX = totoroSpeedX + math.cos(totoroAngle) * totoroSpeed * dt
-    totoroSpeedY = totoroSpeedY + math.sin(totoroAngle) * totoroSpeed * dt
+    totoroSpeedY = totoroSpeedY - math.sin(totoroAngle) * totoroSpeed * dt
+  elseif totoroSpeedX > 0 or totoroSpeedY > 0 then
+    totoroSpeedX = totoroSpeedX - 50 * dt
+    totoroSpeedY = totoroSpeedY - 50 * dt
   end
 
   -- keep totoro inside
@@ -142,6 +145,9 @@ function love.update(dt)
     end
     ]]--\
 
+    totoroX = totoroX + math.cos(totoroAngle) * totoroSpeedX * dt
+    --totoroY = totoroY + math.sin(totoroAngle) * totoroSpeedY * dt
+
 end -- end love.update
 
 -----------------------------------------------------------------------------
@@ -163,12 +169,12 @@ function love.draw()
         love.graphics.draw(tempBG)
 
         -- the player
-        love.graphics.setColor(0, 0, 0, 0.5)
+        love.graphics.setColor(0.8, 0.8, 0.8, 0.9)
         love.graphics.circle('fill', totoroX, totoroY, totoroRadius)
 
         -- the nozzle
-        love.graphics.setColor(0, 1, 1)
-        local totoroCircleDistance = 40
+        love.graphics.setColor(0.8, 0.8, 0.8, 0.9)
+        local totoroCircleDistance = 30
         love.graphics.circle('fill', totoroX + math.cos(totoroAngle) * totoroCircleDistance, totoroY + math.sin(totoroAngle) * totoroCircleDistance, 5)
 
         -- drawing the bullets
