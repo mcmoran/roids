@@ -10,6 +10,11 @@ function love.load()
   require "text" -- for readout info
   require "image" -- for images
 
+  bgMusic = love.audio.newSource('lofi-totoro.ogg', 'stream')
+      bgMusic:setLooping(true)
+      bgMusic:setVolume(0.5)
+      bgMusic:play()
+
   -- particle system manager
   psystem = love.graphics.newParticleSystem(particle, 32)
 
@@ -29,7 +34,7 @@ function love.load()
   shipRadius = 30
   aimRadius = 5
   bulletRadius = 5
-  asteroidRadius = 30
+  asteroidRadius = 50
 
   asteroidSpeed = 100
 
@@ -49,10 +54,11 @@ function love.load()
     meterHeight = 32 --UI and stat variables
     maxLevel = 256
     meterLevel = maxLevel
-    depletionRate = 30
-    repletionRate = 90
+    depletionRate = 80
+    repletionRate = 30
 
     bullets = {}
+    bulletsActive = true
     bulletTimer = 0
 
     math.randomseed(os.time())
@@ -89,16 +95,26 @@ function love.update(dt)
   timer = timer + dt
 
   --this if statement is in charge of the meter level logic. If you hold down space, then we drain the meter.  If not, we recharge the meter until max.
-  if love.keyboard.isDown('space') and meterLevel > 0 then
-    meterLevel = meterLevel - depletionRate * dt
-    if bulletTimer >= 0.5 then
-      bulletTimer = 0
+  if bulletsActive then
+    if love.keyboard.isDown('space') and meterLevel > 0 then
+      meterLevel = meterLevel - depletionRate * dt
+      if meterLevel == 0 then
+        bulletsActive = false
+      end
+      if bulletTimer >= 0.5 then
+        bulletTimer = 0
 
-      table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
+        table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
+      end
+    elseif meterLevel < maxLevel then
+      meterLevel = meterLevel + repletionRate * dt
     end
-  elseif meterLevel < maxLevel then
-    meterLevel = meterLevel + repletionRate * dt
   end
+
+  if meterLevel > maxLevel * 0.8 then
+    bulletsActive = true
+  end
+
 
   if love.keyboard.isDown('right') then
     shipAngle = (shipAngle + turnSpeed * dt) % (2 * math.pi)
