@@ -20,6 +20,6 @@ function splashText()
   love.graphics.setFont(titleScreenCommand)
   love.graphics.print("スタートを押して開始します。", 30, 150)
   love.graphics.setFont(englishScreenFont)
-  love.graphics.print("Press start to begin.", 40, 180)
+  love.graphics.print("Press return to begin.", 40, 180)
 
 end -- end function

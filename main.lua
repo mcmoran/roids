@@ -10,6 +10,17 @@ function love.load()
   require "text" -- for readout info
   require "image" -- for images
 
+  -- particle system manager
+  psystem = love.graphics.newParticleSystem(particle, 32)
+
+  psystem:setParticleLifetime(0.25, 1)
+  psystem:setLinearAcceleration(-200, -200, 200, 200) -- xmin, ymin, xmax, ymax
+  psystem:setColors(1, 0.9, 0.8, 0.5, 0.3, 0.1, 0, 0)
+  psystem:setSizes(1, 1.5, 1, 0.75, 0.5, 0.25)
+
+  particlesX, particlesY = 0
+  particlesActive = false
+
   -- arena
   arenaWidth = 800
   arenaHeight = 600
@@ -18,11 +29,14 @@ function love.load()
   shipRadius = 30
   aimRadius = 5
   bulletRadius = 5
+  asteroidRadius = 30
 
-  asteroidStages = {  {speed = 20, radius = 30, alpha = .25},
-                      {speed = 20, radius = 30, alpha = .50},
-                      {speed = 20, radius = 30, alpha = .75},
-                      {speed = 20, radius = 30, alpha = 1} }
+  asteroidSpeed = 100
+
+  asteroidStages = {  {image = image4},
+                      {image = image3},
+                      {image = image2},
+                      {image = image1} }
 
   function reset()
     shipX = arenaWidth / 2
@@ -41,15 +55,19 @@ function love.load()
     bullets = {}
     bulletTimer = 0
 
-    asteroids = { {x = 100, y = 100}, {x = arenaWidth - 100, y = 100}, {x = arenaWidth / 2, y = arenaHeight - 100} }
+    math.randomseed(os.time())
+
+    asteroids = { {x = math.random(0, 200), y = math.random(0, 200)},
+                  {x = math.random(600, 800), y = math.random(0, 200)},
+                  {x = math.random(0, 200), y = math.random(400, 600)},
+                  {x = math.random(600, 800), y = math.random(400, 600)}
+                }
 
     offset = 6 --offset used for spacing the draw function calls. You can vary this value.
 
     jump = false --state variables
     dir = 1
     timer = 0
-
-    math.randomseed(os.time())
 
     for asteroidIndex, asteroid in ipairs(asteroids) do
         asteroid.angle = math.random() * (2 * math.pi)
@@ -65,7 +83,7 @@ end
 function love.update(dt)
 
   local turnSpeed = 10
-
+  psystem:update(dt)
   bulletTimer = bulletTimer + dt
 
   timer = timer + dt
@@ -81,16 +99,6 @@ function love.update(dt)
   elseif meterLevel < maxLevel then
     meterLevel = meterLevel + repletionRate * dt
   end
-
-  --[[
-  if love.keyboard.isDown('space') then
-    if bulletTimer >= 0.5 then
-      bulletTimer = 0
-
-      table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
-    end
-  end
-  ]]--
 
   if love.keyboard.isDown('right') then
     shipAngle = (shipAngle + turnSpeed * dt) % (2 * math.pi)
@@ -129,15 +137,22 @@ function love.update(dt)
     for asteroidIndex = #asteroids, 1, -1 do
       local asteroid = asteroids[asteroidIndex]
 
-      if areCirclesIntersecting(bullet.x, bullet.y, bulletRadius, asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius) then
+      if areCirclesIntersecting(bullet.x, bullet.y, bulletRadius, asteroid.x, asteroid.y, asteroidRadius) then
         table.remove(bullets, bulletIndex)
 
         if asteroid.stage > 1 then
           local angle1 = math.random() * (2 * math.pi)
           local angle2 = (angle1 - math.pi) % (2 * math.pi)
 
-          table.insert(asteroids, {x = asteroid.x, y = asteroid.y, angle = angle1, stage = asteroid.stage - 1})
+          --table.insert(asteroids, {stage = asteroid.stage - 1})
+
           table.insert(asteroids, {x = asteroid.x, y = asteroid.y, angle = angle2, stage = asteroid.stage - 1})
+        end
+
+        if asteroid.stage == 0 then
+          particlesActive = true
+          particlesX = asteroid.x
+          particlesY = asteroid.y
         end
 
         table.remove(asteroids, asteroidIndex)
@@ -147,11 +162,11 @@ function love.update(dt)
   end
 
   for asteroidIndex, asteroid in ipairs(asteroids) do
-    local asteroidSpeed = 10
-    asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaWidth
-    asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidStages[asteroid.stage].speed * dt) % arenaHeight
+    local asteroidSpeed = 20
+    asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidSpeed * dt) % arenaWidth
+    asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidSpeed * dt) % arenaHeight
 
-    if areCirclesIntersecting(shipX, shipY, shipRadius, asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius) then
+    if areCirclesIntersecting(shipX, shipY, shipRadius, asteroid.x, asteroid.y, asteroidRadius) then
       reset()
       break
     end
@@ -181,32 +196,41 @@ function love.draw()
         love.graphics.setColor(1, 1, 1)
         love.graphics.draw(tempBG)
 
-        love.graphics.setColor(0, 0, 1)
+        -- ship
+        love.graphics.setColor(0.2, 0.2, 0.2)
         love.graphics.circle('fill', shipX, shipY, shipRadius)
 
-        love.graphics.setColor(0, 1, 1)
+        -- nozzle
+        love.graphics.setColor(0, 1, 1, 0.8)
         love.graphics.circle('fill', shipX + math.cos(shipAngle) * 20, shipY + math.sin(shipAngle) * 20, aimRadius)
 
+        -- bullets
         for bulletIndex, bullet in ipairs(bullets) do
-          love.graphics.setColor(0, 1, 0)
+          love.graphics.setColor(0, 1, 1, 0.8)
           love.graphics.circle('fill', bullet.x, bullet.y, bulletRadius)
         end
 
         --meter drawing section.  Keep in mind the variables for the maxLevel and meterLevel.
-        love.graphics.setColor(0.3, 0.3, 0)
+        love.graphics.setColor(1, 1, 1, 0.2)
         love.graphics.rectangle('fill', arenaWidth / 20, arenaHeight / 20, maxLevel, meterHeight)
-        love.graphics.setColor(1, 1, 0)
+        love.graphics.setColor(0, 1, 1, 0.8)
         love.graphics.rectangle('fill', arenaWidth / 20, arenaHeight / 20, meterLevel, meterHeight)
-        love.graphics.setColor(0, 1, 1)
-        love.graphics.setLineWidth(4)
+        love.graphics.setColor(1, 1, 1, 0.5)
+        love.graphics.setLineWidth(2)
         love.graphics.rectangle('line', arenaWidth / 20, arenaHeight / 20, maxLevel, meterHeight)
-        love.graphics.setFont(love.graphics.newFont(20))
-        love.graphics.print('ATTACK', arenaWidth / 20, (arenaHeight / 20) + 38)
+        love.graphics.setColor(1, 1, 1)
+        love.graphics.setFont(englishScreenFont)
+        love.graphics.print('water level', arenaWidth / 20, (arenaHeight / 20) + 38)
 
         -- draw enemies
         for asteroidIndex, asteroid in ipairs(asteroids) do
-          love.graphics.setColor(1, 1, 1, asteroidStages[asteroid.stage].alpha)
-          love.graphics.draw(miteImage, asteroid.x, asteroid.y, asteroidStages[asteroid.stage].radius)
+          love.graphics.setColor(1, 1, 1)
+          love.graphics.draw(asteroidStages[asteroid.stage].image, asteroid.x, asteroid.y, asteroidRadius)
+        end
+
+        if particlesActive then
+          love.graphics.draw(psystem, particlesX, particlesY)
+          psystem:emit(120)
         end
 
       end
