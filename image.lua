@@ -16,4 +16,4 @@ image4 = love.graphics.newImage("image4.png")
 
 -- player
 
---player = love.graphics.newImage("player.png")
+player_side = love.graphics.newImage("totoro_side.png")

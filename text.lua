@@ -23,3 +23,14 @@ function splashText()
   love.graphics.print("Press return to begin.", 40, 180)
 
 end -- end function
+
+
+function counterText()
+
+  love.graphics.setColor(1, 1, 1)
+  love.graphics.setFont(englishScreenFont)
+  love.graphics.print("Dust Mites Cleaned: ", 450, 50)
+  love.graphics.setFont(titleScreenCommand)
+  love.graphics.print(miteCounter, 700, 50)
+
+end -- end function

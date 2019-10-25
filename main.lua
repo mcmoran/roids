@@ -26,17 +26,23 @@ function love.load()
   particlesX, particlesY = 0
   particlesActive = false
 
+
   -- arena
   arenaWidth = 800
   arenaHeight = 600
 
   -- sizes
   shipRadius = 30
+  shipWidth = 65
+  shipHeight = 80
   aimRadius = 5
   bulletRadius = 5
-  asteroidRadius = 50
+  bulletSize = 5
+  asteroidRadius = 30
+  asteroidSize = 30
 
   asteroidSpeed = 100
+  miteCounter = 0
 
   asteroidStages = {  {image = image4},
                       {image = image3},
@@ -49,13 +55,16 @@ function love.load()
     shipAngle = 0
     shipSpeedX = 0
     shipSpeedY = 0
-    shipSpeed = 100
+    shipSpeed = 200
+
+
+    spawnTimer = 0
 
     meterHeight = 32 --UI and stat variables
     maxLevel = 256
     meterLevel = maxLevel
     depletionRate = 80
-    repletionRate = 30
+    repletionRate = 20
 
     bullets = {}
     bulletsActive = true
@@ -88,23 +97,26 @@ end
 -- ======================================================================
 function love.update(dt)
 
-  local turnSpeed = 10
+  local turnSpeed = 5
   psystem:update(dt)
-  bulletTimer = bulletTimer + dt
 
+  -- timers
+  bulletTimer = bulletTimer + dt
   timer = timer + dt
+  spawnTimer = spawnTimer + dt
 
   --this if statement is in charge of the meter level logic. If you hold down space, then we drain the meter.  If not, we recharge the meter until max.
   if bulletsActive then
     if love.keyboard.isDown('space') and meterLevel > 0 then
       meterLevel = meterLevel - depletionRate * dt
-      if meterLevel == 0 then
+      if meterLevel == 10 then
         bulletsActive = false
       end
-      if bulletTimer >= 0.5 then
+      if bulletTimer >= 0.001 then
         bulletTimer = 0
 
-        table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
+        --table.insert(bullets, {x = shipX + math.cos(shipAngle) * shipRadius, y = shipY + math.sin(shipAngle) * shipRadius, angle = shipAngle, timeLeft = 4})
+        table.insert(bullets, {x = shipX + math.cos(shipAngle) * 40, y = shipY + math.sin(shipAngle) * 40, angle = shipAngle, timeLeft = 4})
       end
     elseif meterLevel < maxLevel then
       meterLevel = meterLevel + repletionRate * dt
@@ -114,7 +126,6 @@ function love.update(dt)
   if meterLevel > maxLevel * 0.8 then
     bulletsActive = true
   end
-
 
   if love.keyboard.isDown('right') then
     shipAngle = (shipAngle + turnSpeed * dt) % (2 * math.pi)
@@ -146,14 +157,28 @@ function love.update(dt)
     else
       local bulletSpeed = 500
 
-      bullet.x = (bullet.x + math.cos(bullet.angle) * bulletSpeed * dt) % arenaWidth
-      bullet.y = (bullet.y + math.sin(bullet.angle) * bulletSpeed * dt) % arenaHeight
+      bullet.x = (bullet.x + math.cos(bullet.angle) * bulletSpeed * dt) -- % arenaWidth
+      bullet.y = (bullet.y + math.sin(bullet.angle) * bulletSpeed * dt) -- % arenaHeight
+
+      if bullet.x < 0 or bullet.x > 800 or bullet.y < 0 or bullet.y > 600 then
+        table.remove(bullets, bulletIndex)
+      end
     end
 
     for asteroidIndex = #asteroids, 1, -1 do
       local asteroid = asteroids[asteroidIndex]
 
+      --[[Collision detection section (this example uses AABB).  This is where you would put the life or HP logic.
+      if AABB(playerX, playerY, player:getWidth(), player:getHeight(), enemyX, enemyY, enemy:getWidth(), enemy:getHeight()) then
+        if timer >= 0.6 then --this timer if-statement ensures some frames of invincibility. If not, a single hit will cause excessive life drain.
+          lives = lives - 1
+          timer = 0
+        end
+      end ]]--
+
       if areCirclesIntersecting(bullet.x, bullet.y, bulletRadius, asteroid.x, asteroid.y, asteroidRadius) then
+        particlesX = bullet.x
+        particlesY = bullet.y
         table.remove(bullets, bulletIndex)
 
         if asteroid.stage > 1 then
@@ -165,20 +190,27 @@ function love.update(dt)
           table.insert(asteroids, {x = asteroid.x, y = asteroid.y, angle = angle2, stage = asteroid.stage - 1})
         end
 
-        if asteroid.stage == 0 then
-          particlesActive = true
-          particlesX = asteroid.x
-          particlesY = asteroid.y
+        table.remove(asteroids, asteroidIndex)
+        if asteroid.stage == 1 then
+          psystem:emit(120)
+          miteCounter = miteCounter + 1
         end
 
-        table.remove(asteroids, asteroidIndex)
         break
       end
     end
+  end -- end bullets
+
+  if spawnTimer >= 3 then
+    spawnAsteroid(math.random(1,3))
+    --table.insert(asteroids, {x = math.random(0, 800), y = math.random(0, 200), angle = 0, stage = 4})
+    spawnTimer = 0
   end
 
   for asteroidIndex, asteroid in ipairs(asteroids) do
     local asteroidSpeed = 20
+
+    asteroid.angle = math.atan2(shipY - asteroid.y, shipX - asteroid.x)
     asteroid.x = (asteroid.x + math.cos(asteroid.angle) * asteroidSpeed * dt) % arenaWidth
     asteroid.y = (asteroid.y + math.sin(asteroid.angle) * asteroidSpeed * dt) % arenaHeight
 
@@ -186,6 +218,14 @@ function love.update(dt)
       reset()
       break
     end
+
+    --[[Collision detection section (this example uses AABB).  This is where you would put the life or HP logic.
+    if AABB(playerX, playerY, player:getWidth(), player:getHeight(), enemyX, enemyY, enemy:getWidth(), enemy:getHeight()) then
+      if timer >= 0.6 then --this timer if-statement ensures some frames of invincibility. If not, a single hit will cause excessive life drain.
+        lives = lives - 1
+        timer = 0
+      end
+    end ]]--
   end
 
   if #asteroids == 0 then
@@ -213,12 +253,15 @@ function love.draw()
         love.graphics.draw(tempBG)
 
         -- ship
-        love.graphics.setColor(0.2, 0.2, 0.2)
-        love.graphics.circle('fill', shipX, shipY, shipRadius)
+        love.graphics.setColor(1, 1, 1)
+        -- angle, scale, offset
+        love.graphics.draw(player_side, shipX-32, shipY-32)
+        --love.graphics.circle('fill', shipX, shipY, shipRadius)
 
         -- nozzle
         love.graphics.setColor(0, 1, 1, 0.8)
-        love.graphics.circle('fill', shipX + math.cos(shipAngle) * 20, shipY + math.sin(shipAngle) * 20, aimRadius)
+        love.graphics.draw(particle, shipX + math.cos(shipAngle) * 40, shipY + math.sin(shipAngle) * 40, shipAngle, 1, 1, 1, 1)
+        --love.graphics.circle('fill', shipX + math.cos(shipAngle) * 40, shipY + math.sin(shipAngle) * 40, aimRadius)
 
         -- bullets
         for bulletIndex, bullet in ipairs(bullets) do
@@ -242,12 +285,11 @@ function love.draw()
         for asteroidIndex, asteroid in ipairs(asteroids) do
           love.graphics.setColor(1, 1, 1)
           love.graphics.draw(asteroidStages[asteroid.stage].image, asteroid.x, asteroid.y, asteroidRadius)
+          love.graphics.draw(psystem, particlesX, particlesY)
         end
 
-        if particlesActive then
-          love.graphics.draw(psystem, particlesX, particlesY)
-          psystem:emit(120)
-        end
+        -- counter text
+        counterText()
 
       end
     end
@@ -260,6 +302,14 @@ end
 -- collision detection
 function areCirclesIntersecting(aX, aY, aRadius, bX, bY, bRadius)
   return (aX - bX)^2 + (aY - bY)^2 <= (aRadius + bRadius)^2
+end
+
+--AABB collision detection function.  Takes two objects' x, y coordinates with width and height values.
+function AABB(x1, y1, w1, h1, x2, y2, w2, h2)
+  return x1 < x2 + w2 and
+         x2 < x1 + w1 and
+         y1 < y2 + h2 and
+         y2 < y1 + h1
 end
 
 -- key presses
@@ -282,5 +332,21 @@ function love.keyreleased(key)
   -- stop motion
   if key == "up" or key == "down" then
     shipSpeedX, shipSpeedY = 0, 0
+  end
+end
+
+function spawnAsteroid(number)
+  for i = 1, number, 1 do
+    --local angle1 = math.random() * (2 * math.pi)
+    --local angle2 = (angle1 - math.pi) % (2 * math.pi)
+    possibleSpawn = { {x = 0, y = 0},
+                    {x = 800, y = 0},
+                    {x = 0, y = 600},
+                    {x = 800, y = 600}}
+
+    locationRandom = math.random(1,4)
+
+    table.insert(asteroids, {x = possibleSpawn[locationRandom].x, y = possibleSpawn[locationRandom].y, angle = 0, stage = 4})
+    --table.insert(asteroids, {x = asteroid.x, y = asteroid.y, angle = angle2, stage = asteroid.stage - 1})
   end
 end
